@@ -1,15 +1,15 @@
 import requests
 import uuid
+import streamlit as st
+
+# Tenta ler do config.py ou do st.secrets (Streamlit Cloud)
 try:
     import config
     MP_TOKEN = getattr(config, 'MERCADO_PAGO_ACCESS_TOKEN', "")
-except ImportError:
-    MP_TOKEN = ""
+except:
+    MP_TOKEN = st.secrets.get("MERCADO_PAGO_ACCESS_TOKEN", "")
 
 def gerar_cobranca_pix(valor=4.90, descricao="Laudo de Auditoria Digital"):
-    """
-    Gera um QR Code Pix para pagamento via Mercado Pago.
-    """
     if not MP_TOKEN:
         return {"erro": "Sistema de pagamento não configurado."}
 
