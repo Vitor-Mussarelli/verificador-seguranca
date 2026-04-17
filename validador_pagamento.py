@@ -1,11 +1,15 @@
 import requests
 import streamlit as st
-try:
-    import config
-    ASAAS_API_KEY = getattr(config, 'ASAAS_API_KEY', "")
-except:
-    ASAAS_API_KEY = st.secrets.get("ASAAS_API_KEY", "")
 
+# Tenta ler do st.secrets ou do config.py
+try:
+    ASAAS_API_KEY = st.secrets["ASAAS_API_KEY"]
+except:
+    try:
+        import config
+        ASAAS_API_KEY = getattr(config, 'ASAAS_API_KEY', "")
+    except:
+        ASAAS_API_KEY = ""
 
 def consultar_pix_real(chave):
     """
