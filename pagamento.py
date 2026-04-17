@@ -4,7 +4,7 @@ try:
     import config
     MP_TOKEN = getattr(config, 'MERCADO_PAGO_ACCESS_TOKEN', "")
 except ImportError:
-    MP_TOKEN = ""
+    MP_TOKEN = "APP_USR-6863888755721841-041708-648f3b36a7db16d4a14fcac0f0760189-418275486"
 
 def gerar_cobranca_pix(valor=4.90, descricao="Laudo de Auditoria Digital"):
     """
