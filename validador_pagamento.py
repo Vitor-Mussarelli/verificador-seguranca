@@ -1,9 +1,11 @@
 import requests
+import streamlit as st
 try:
     import config
     ASAAS_API_KEY = getattr(config, 'ASAAS_API_KEY', "")
-except ImportError:
-    ASAAS_API_KEY = ""
+except:
+    ASAAS_API_KEY = st.secrets.get("ASAAS_API_KEY", "")
+
 
 def consultar_pix_real(chave):
     """
