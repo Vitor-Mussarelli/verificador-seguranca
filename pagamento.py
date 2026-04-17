@@ -28,7 +28,7 @@ def gerar_cobranca_pix(valor=4.90, descricao="Laudo de Auditoria Digital"):
         "description": descricao,
         "payment_method_id": "pix",
         "payer": {
-            "email": "cliente@exemplo.com",
+            "email": "contato@egolpe.com.br", # E-mail mais aceitável
             "first_name": "Cliente",
             "last_name": "Seguro"
         }
