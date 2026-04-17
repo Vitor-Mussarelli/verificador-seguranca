@@ -2,12 +2,15 @@ import requests
 import uuid
 import streamlit as st
 
-# Tenta ler do config.py ou do st.secrets (Streamlit Cloud)
+# Tenta ler do st.secrets (Streamlit Cloud) ou do config.py (Local)
 try:
-    import config
-    MP_TOKEN = getattr(config, 'MERCADO_PAGO_ACCESS_TOKEN', "")
+    MP_TOKEN = st.secrets["MERCADO_PAGO_ACCESS_TOKEN"]
 except:
-    MP_TOKEN = st.secrets.get("MERCADO_PAGO_ACCESS_TOKEN", "")
+    try:
+        import config
+        MP_TOKEN = getattr(config, 'MERCADO_PAGO_ACCESS_TOKEN', "")
+    except:
+        MP_TOKEN = ""
 
 def gerar_cobranca_pix(valor=4.90, descricao="Laudo de Auditoria Digital"):
     if not MP_TOKEN:
@@ -16,7 +19,7 @@ def gerar_cobranca_pix(valor=4.90, descricao="Laudo de Auditoria Digital"):
     url = "https://api.mercadopago.com/v1/payments"
     headers = {
         "Authorization": f"Bearer {MP_TOKEN}",
-        "X-Idempotency-Key": str(uuid.uuid4()),
+        "X-Idempotency-Key": str(uuid.uuid4( )),
         "Content-Type": "application/json"
     }
     
@@ -25,7 +28,7 @@ def gerar_cobranca_pix(valor=4.90, descricao="Laudo de Auditoria Digital"):
         "description": descricao,
         "payment_method_id": "pix",
         "payer": {
-            "email": "pagador@exemplo.com", # Opcional: coletar do usuário
+            "email": "cliente@exemplo.com",
             "first_name": "Cliente",
             "last_name": "Seguro"
         }
@@ -50,7 +53,7 @@ def verificar_status_pagamento(payment_id):
     url = f"https://api.mercadopago.com/v1/payments/{payment_id}"
     headers = {"Authorization": f"Bearer {MP_TOKEN}"}
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers )
         if response.status_code == 200:
             return response.json()["status"] == "approved"
         return False
