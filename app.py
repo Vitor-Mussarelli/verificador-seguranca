@@ -62,7 +62,8 @@ def mostrar_paywall(dados, tipo):
         """)
     
     with col_pay:
-        if not st.session_state.pago:
+        #if not st.session_state.pago:
+        if True: # MODO DE TESTE: O botão de download sempre aparecerá abaixo
             st.info("💰 Valor do Laudo: **R$ 4,90**")
             if st.button(f"🚀 Gerar QR Code Pix para Liberar", key=f"pay_btn_{tipo}"):
                 with st.spinner("Gerando cobrança segura..."):
