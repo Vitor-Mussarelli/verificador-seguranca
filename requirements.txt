@@ -1,0 +1,6 @@
+streamlit
+requests
+python-whois
+fpdf2
+qrcode[pil]
+mercadopago
