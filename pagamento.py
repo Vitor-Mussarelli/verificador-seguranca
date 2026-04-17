@@ -33,7 +33,6 @@ def gerar_cobranca_pix(valor=4.90, descricao="Laudo de Auditoria Digital"):
             "last_name": "Seguro"
         }
     }
-
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=10)
         if response.status_code == 201:
