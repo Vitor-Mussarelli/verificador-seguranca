@@ -54,7 +54,5 @@ def verificar_status_pagamento(payment_id):
     try:
         response = requests.get(url, headers=headers )
         if response.status_code == 200:
-            return response.json()["status"] == "approved"
-        return False
-    except:
-        return False
+            return {"erro": f"Erro MP {response.status_code}: {response.text}"}
+
