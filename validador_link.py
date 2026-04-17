@@ -7,9 +7,10 @@ import streamlit as st
 
 # Tenta importar a chave da API, se não existir usa vazio
 try:
-    from config import GOOGLE_SAFE_BROWSING_API_KEY
-except ImportError:
-    GOOGLE_SAFE_BROWSING_API_KEY = ""
+    import config
+    GOOGLE_SAFE_BROWSING_API_KEY = getattr(config, 'GOOGLE_SAFE_BROWSING_API_KEY', "")
+except:
+    GOOGLE_SAFE_BROWSING_API_KEY = st.secrets.get("GOOGLE_SAFE_BROWSING_API_KEY", "")
 
 # --- NOVA CAMADA: Inteligência de Sites Conhecidos (Whitelisting) ---
 SITES_CONFIAVEIS = {
