@@ -6,185 +6,150 @@ from gerador_pdf import gerar_pdf_laudo
 from pagamento import gerar_cobranca_pix, verificar_status_pagamento
 import time
 
-# Configuração da página
-st.set_page_config(page_title="É Golpe?", page_icon="🛡️", layout="wide")
+# --- CONFIGURAÇÃO DA PÁGINA (ESTILO SAAS) ---
+st.set_page_config(page_title="É Golpe? | Auditoria Digital", page_icon="🛡️", layout="wide")
+
+# CSS Customizado para Estilo Moderno (SiteChecker)
+st.markdown("""
+    <style>
+    .main { background-color: #f8f9fa; }
+    .stButton>button { width: 100%; border-radius: 8px; height: 3em; background-color: #0056b3; color: white; font-weight: bold; }
+    .stTextInput>div>div>input { border-radius: 8px; }
+    .reportview-container .main .block-container { padding-top: 2rem; }
+    .card { background-color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; border-left: 5px solid #0056b3; }
+    .metric-card { background-color: #ffffff; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #e0e0e0; }
+    .status-safe { color: #28a745; font-weight: bold; }
+    .status-warning { color: #ffc107; font-weight: bold; }
+    .status-danger { color: #dc3545; font-weight: bold; }
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- GERENCIAMENTO DE ESTADO ---
-if 'historico' not in st.session_state:
-    st.session_state.historico = []
-if 'pagamento_id' not in st.session_state:
-    st.session_state.pagamento_id = None
-if 'pago' not in st.session_state:
-    st.session_state.pago = False
-if 'dados_atuais' not in st.session_state:
-    st.session_state.dados_atuais = None
-if 'tipo_atual' not in st.session_state:
-    st.session_state.tipo_atual = None
+if 'historico' not in st.session_state: st.session_state.historico = []
+if 'pagamento_id' not in st.session_state: st.session_state.pagamento_id = None
+if 'pago' not in st.session_state: st.session_state.pago = False
+if 'dados_atuais' not in st.session_state: st.session_state.dados_atuais = None
+if 'tipo_atual' not in st.session_state: st.session_state.tipo_atual = None
 
 def adicionar_ao_historico(item):
     if item and item not in st.session_state.historico:
         st.session_state.historico.append(item)
 
 # --- BARRA LATERAL ---
-st.sidebar.title("🕒 Consultas Recentes")
-if st.session_state.historico:
-    for item in reversed(st.session_state.historico):
-        st.sidebar.info(f"{item}")
-else:
-    st.sidebar.write("Nenhuma consulta realizada ainda.")
-
-if st.sidebar.button("Limpar Histórico"):
-    st.session_state.historico = []
-    st.session_state.pago = False
-    st.session_state.pagamento_id = None
-    st.rerun()
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/1162/1162456.png", width=80)
+    st.title("Painel de Controle")
+    st.markdown("---")
+    st.subheader("🕒 Consultas Recentes")
+    if st.session_state.historico:
+        for item in reversed(st.session_state.historico):
+            st.info(f"🔍 {item}")
+    else: st.write("Nenhuma consulta.")
+    if st.sidebar.button("Limpar Histórico"):
+        st.session_state.historico = []; st.session_state.pago = False; st.rerun()
 
 # --- ÁREA PRINCIPAL ---
-st.title("🛡️ Verificador de Segurança Profissional v4.1")
-st.write("A única ferramenta que cruza dados de Site, CNPJ e Pagamento para sua total segurança.")
+st.markdown("<h1 style='text-align: center; color: #002d5b;'>🛡️ Auditoria de Segurança Digital</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 1.2em; color: #666;'>A única plataforma que cruza dados de Site, CNPJ e Pagamento para sua total proteção.</p>", unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["🌐 Validar Site/Link", "📋 Validar Empresa (CNPJ)", "💸 Analisar Risco de Pix"])
+# --- SISTEMA DE BUSCA UNIFICADO (ESTILO SITECHECKER) ---
+with st.container():
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    col_input, col_btn = st.columns([4, 1])
+    with col_input:
+        entrada = st.text_input("", placeholder="Cole o Link (ex: site.com.br) ou CNPJ (ex: 00.000.000/0001-00) aqui...", label_visibility="collapsed")
+    with col_btn:
+        buscar = st.button("ANALISAR AGORA")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# Função auxiliar para o Paywall (Melhorada para visibilidade)
-def mostrar_paywall(dados, tipo):
+# --- LÓGICA DE PROCESSAMENTO ---
+if buscar and entrada:
+    adicionar_ao_historico(entrada)
+    so_numeros = ''.join(filter(str.isdigit, entrada))
+    
+    with st.spinner("Realizando Auditoria Profissional..."):
+        if len(so_numeros) == 14:
+            st.session_state.dados_atuais = verificar_cnpj(entrada)
+            st.session_state.tipo_atual = "cnpj"
+        elif "." in entrada:
+            st.session_state.dados_atuais = verificar_link(entrada)
+            st.session_state.tipo_atual = "link"
+        else:
+            st.error("Formato inválido. Digite um CNPJ ou Link.")
+        st.session_state.pago = False
+
+# --- EXIBIÇÃO DE RESULTADOS (ESTILO DASHBOARD) ---
+if st.session_state.dados_atuais:
+    d = st.session_state.dados_atuais
+    tipo = st.session_state.tipo_atual
+    
+    st.markdown(f"### 📊 Relatório de Auditoria: {d.get('dominio') or d.get('razao_social')}")
+    
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+        st.metric("Score de Confiança", f"{95 if d['nivel_risco'] == 'baixo' else 40 if d['nivel_risco'] == 'medio' else 5}/100")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with c2:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+        status_class = "status-safe" if d['nivel_risco'] == 'baixo' else "status-warning" if d['nivel_risco'] == 'medio' else "status-danger"
+        st.markdown(f"Status: <span class='{status_class}'>{d['nivel_risco'].upper()}</span>", unsafe_allow_html=True)
+        st.write(d['veredito'])
+        st.markdown("</div>", unsafe_allow_html=True)
+    with c3:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+        if tipo == "link":
+            st.write(f"**SSL:** {'✅ Ativo' if d['seguro'] else '❌ Ausente'}")
+            st.write(f"**Idade:** {d['idade_meses']} meses")
+        else:
+            st.write(f"**Capital:** {d['capital_social']}")
+            st.write(f"**Tempo:** {d['meses_abertos']} meses")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # --- ÁREA PREMIUM (PAYWALL) ---
     st.markdown("---")
-    st.subheader("📥 ÁREA PREMIUM: Laudo de Auditoria Detalhado")
-    
     col_info, col_pay = st.columns([1, 1])
-    
     with col_info:
-        st.write("""
-        **O que você recebe no Laudo Profissional:**
-        - ✅ **Score de Confiança:** Nota de 0 a 100 baseada em IA.
-        - ✅ **Análise Comportamental:** Tradução técnica dos riscos.
-        - ✅ **Validade Jurídica:** Documento com Hash para B.O. e Bancos.
-        - ✅ **Checklist Anti-Fraude:** Orientações de segurança.
-        """)
+        st.markdown("#### 📥 Obter Laudo de Auditoria Premium")
+        st.write("O laudo contém o **Score de Coerência de Negócio**, análise de vínculo de fraude e validade jurídica.")
+        st.info("💡 **Diferencial:** Este documento é aceito por bancos para contestação de Pix via MED.")
     
     with col_pay:
-        if not st.session_state.pago:        
-            st.info("💰 Valor do Laudo: **R$ 4,90**")
-            if st.button(f"🚀 Gerar QR Code Pix para Liberar", key=f"pay_btn_{tipo}"):
-                with st.spinner("Gerando cobrança segura..."):
-                    cobranca = gerar_cobranca_pix()
-                    if "erro" in cobranca:
-                        st.error(f"❌ Erro: {cobranca['erro']}")
-                        st.warning("Dica: Certifique-se de usar o 'Access Token' de PRODUÇÃO no config.py.")
-                    else:
-                        st.session_state.pagamento_id = cobranca["id"]
-                        st.session_state.qr_code = cobranca["qr_code"]
-                        st.session_state.qr_code_base64 = cobranca["qr_code_base64"]
-            
-            if st.session_state.pagamento_id:
-                st.write("### Escaneie para Pagar:")
-                st.image(f"data:image/png;base64,{st.session_state.qr_code_base64}", width=200)
-                st.code(st.session_state.qr_code, language="text")
-                st.caption("Copie o código acima se estiver no celular.")
-                
-                if st.button("🔄 Já paguei! Verificar liberação"):
-                    if verificar_status_pagamento(st.session_state.pagamento_id):
-                        st.session_state.pago = True
-                        st.success("✅ Pagamento aprovado! Download liberado.")
-                        st.rerun()
-                    else:
-                        st.error("Aguardando confirmação do banco... Tente novamente em 10 segundos.")
+        # MODO DE TESTE PARA O USUÁRIO (LIBERADO)
+        st.success("🌟 Acesso de Desenvolvedor: Download Liberado para Validação")
+        pdf_bytes = gerar_pdf_laudo(d, tipo=tipo)
+        st.download_button(label="📥 BAIXAR LAUDO AGORA (PDF)", 
+                           data=pdf_bytes, 
+                           file_name=f"laudo_auditoria_{tipo}.pdf", 
+                           mime="application/pdf",
+                           type="primary")
         
-        else:
-            st.success("🌟 Acesso Premium Liberado!")
-            pdf_bytes = gerar_pdf_laudo(dados, tipo=tipo)
-            st.download_button(label="📥 BAIXAR LAUDO AGORA (PDF)", 
-                               data=pdf_bytes, 
-                               file_name=f"laudo_seguranca_{tipo}.pdf", 
-                               mime="application/pdf",
-                               type="primary")
+        st.markdown("---")
+        st.write("Simulação de Pagamento (Para Clientes):")
+        if st.button("Gerar Pix de R$ 4,90"):
+            c = gerar_cobranca_pix()
+            if "erro" not in c:
+                st.image(f"data:image/png;base64,{c['qr_code_base64']}", width=150)
+                st.code(c['qr_code'])
 
-with tab1:
-    entrada_link = st.text_input("Cole o Link aqui:", placeholder="ex: mercadolivre.com.br", key="input_link")
-    if st.button("Analisar Link", type="primary", key="btn_link"):
-        if entrada_link:
-            adicionar_ao_historico(entrada_link)
-            with st.spinner("Analisando infraestrutura..."):
-                dados = verificar_link(entrada_link)
-                st.session_state.dados_atuais = dados
-                st.session_state.tipo_atual = "link"
-                st.session_state.pago = False # Reseta para nova consulta
-                st.session_state.pagamento_id = None
-        else: st.error("Preencha o link.")
-
-    if st.session_state.tipo_atual == "link" and st.session_state.dados_atuais:
-        d = st.session_state.dados_atuais
-        st.subheader(f"🌐 Relatório: {d['dominio']}")
-        if d["nivel_risco"] == "baixo": st.success(d["veredito"])
-        elif d["nivel_risco"] == "medio": st.warning(d["veredito"])
-        else: st.error(d["veredito"])
-        
-        termo_limpo = d['dominio'].split('.')[0]
-        st.link_button(f"🔍 Ver reputação no Reclame Aqui", f"https://www.reclameaqui.com.br/busca/?q={termo_limpo}")
-        mostrar_paywall(d, "link")
-
-with tab2:
-    entrada_cnpj = st.text_input("Digite o CNPJ aqui:", placeholder="Ex: 06.990.590/0001-23", key="input_cnpj")
-    if st.button("Analisar CNPJ", type="primary", key="btn_cnpj"):
-        if entrada_cnpj:
-            adicionar_ao_historico(entrada_cnpj)
-            with st.spinner("Consultando bases oficiais..."):
-                dados = verificar_cnpj(entrada_cnpj)
-                if "erro" in dados: st.error(dados["erro"])
-                else:
-                    st.session_state.dados_atuais = dados
-                    st.session_state.tipo_atual = "cnpj"
-                    st.session_state.pago = False
-                    st.session_state.pagamento_id = None
-        else: st.error("Preencha o CNPJ.")
-
-    if st.session_state.tipo_atual == "cnpj" and st.session_state.dados_atuais:
-        d = st.session_state.dados_atuais
-        st.subheader(f"📋 {d['razao_social']}")
-        if d["nivel_risco"] == "baixo": st.success(d["veredito"])
-        elif d["nivel_risco"] == "medio": st.warning(d["veredito"])
-        else: st.error(d["veredito"])
-        
-        c1, c2 = st.columns(2)
-        c1.metric("Tempo de Mercado", f"{d['meses_abertos']} meses")
-        c2.metric("Capital Social", d["capital_social"])
-        mostrar_paywall(d, "cnpj")
-
-with tab3:
-    st.subheader("🚀 Inovação: Analisador de Risco de Recebedor (Anti-Laranja)")
-    chave_pix = st.text_input("Chave Pix (E-mail, Telefone ou CPF/CNPJ):", key="input_pix")
-    nome_recebedor = st.text_input("Nome que aparece no Pix:", key="input_nome")
-    tipo_conta = st.radio("A conta de destino é:", ["Pessoa Jurídica (CNPJ)", "Pessoa Física (CPF)"], key="input_tipo")
-    banco_destino = st.selectbox("Banco de Destino:", ["Selecione...", "Nubank", "Inter", "Cora", "PagBank", "C6 Bank", "Itaú", "Bradesco", "Santander", "Caixa", "Banco do Brasil", "Outro"], key="input_banco")
+# --- ABA DE PIX (INOVAÇÃO) ---
+st.markdown("---")
+st.subheader("💸 Analisador de Risco de Pagamento (Anti-Laranja)")
+with st.expander("Clique para validar dados de um recebedor Pix"):
+    c1, c2 = st.columns(2)
+    with c1:
+        ch_pix = st.text_input("Chave Pix:")
+        nm_rec = st.text_input("Nome do Recebedor:")
+    with c2:
+        tp_con = st.radio("Tipo de Conta:", ["Pessoa Jurídica (CNPJ)", "Pessoa Física (CPF)"])
+        bc_des = st.selectbox("Banco:", ["Nubank", "Inter", "Cora", "PagBank", "Itaú", "Bradesco", "Santander", "Outro"])
     
-    if st.button("Analisar Risco de Pagamento", key="btn_pix"):
-        if chave_pix and nome_recebedor and banco_destino != "Selecione...":
-            adicionar_ao_historico(f"Pix: {chave_pix}")
-            with st.spinner("Validando chave..."):
-                res = analisar_risco_pix(chave_pix, banco_destino, tipo_conta, nome_recebedor)
-                if res["nivel_risco"] == "baixo": st.success(res["veredito"])
-                elif res["nivel_risco"] == "medio": st.warning(res["veredito"])
-                else: st.error(res["veredito"])
-                for a in res["alertas"]: st.info(a)
-        else: st.error("Preencha todos os campos.")
+    if st.button("Validar Recebedor"):
+        res = analisar_risco_pix(ch_pix, bc_des, tp_con, nm_rec)
+        if res["nivel_risco"] == "baixo": st.success(res["veredito"])
+        else: st.error(res["veredito"])
+        for a in res["alertas"]: st.info(a)
 
-# --- SEÇÃO DE DICAS ---
-st.divider()
-c1, c2 = st.columns(2)
-with c1:
-    st.subheader("🚩 Sinais de Alerta")
-    with st.expander("Clique para ver os sinais de golpe"):
-        st.write("""
-        1. **Preço milagroso:** Descontos acima de 50% em eletrônicos ou produtos de marca.
-        2. **Urgência:** Mensagens como 'Últimas unidades', 'Sua conta será bloqueada' ou 'Promoção válida por 10 minutos'.
-        3. **Pix para Pessoa Física:** Se você está comprando de uma loja (CNPJ), o pagamento NUNCA deve ser para um CPF de uma pessoa física.
-        4. **Erros de Português:** Sites de grandes empresas raramente possuem erros grosseiros de escrita.
-        """)
-with c2:
-    st.subheader("🛡️ Como se proteger")
-    with st.expander("Clique para ver as dicas de proteção"):
-        st.write("""
-        - **Cartão Virtual:** Use sempre cartão de crédito virtual para compras online.
-        - **Desconfie de Links:** Não clique em links recebidos via SMS ou WhatsApp.
-        - **Confira o Remetente:** Verifique se o e-mail termina com o domínio oficial da empresa.
-        - **Use este Verificador:** Sempre que tiver dúvida, passe o link ou CNPJ por aqui.
-        """)
+# --- FOOTER ---
+st.markdown("---")
+st.markdown("<p style='text-align: center; color: #999;'>© 2026 Auditoria Digital - Proteção Avançada contra Fraudes.</p>", unsafe_allow_html=True)
