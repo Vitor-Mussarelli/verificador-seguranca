@@ -4,3 +4,4 @@ python-whois
 fpdf2
 qrcode[pil]
 mercadopago
+tldextract
